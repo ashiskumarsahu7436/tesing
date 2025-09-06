@@ -38,14 +38,13 @@ async function analyzeAudio() {
         return;
     }
 
-    const formData = new FormData();
-    formData.append("apiKey", apiKey);
-    formData.append("audio", fileInput.files[0]);
-
     try {
-        const response = await fetch("/api/analyze", {
+        const file = fileInput.files[0];
+        const arrayBuffer = await file.arrayBuffer();
+
+        const response = await fetch("/api/analyze?apiKey=" + encodeURIComponent(apiKey), {
             method: "POST",
-            body: formData
+            body: arrayBuffer
         });
 
         const responseText = await response.text();
@@ -87,6 +86,7 @@ async function analyzeAudio() {
 
     } catch (err) {
         resultsDiv.innerHTML = "Error: " + err;
+        console.error(err);
     }
 }
 </script>
