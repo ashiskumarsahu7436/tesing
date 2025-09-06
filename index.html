@@ -328,55 +328,54 @@
                 }
             }
             
-            // Transcription handler
-            transcribeBtn.addEventListener('click', async function() {
-                if (!selectedFile) {
-                    statusDiv.textContent = 'कृपया पहले एक audio file select करें';
-                    statusDiv.className = 'status error';
-                    return;
-                }
-                
-                // Show processing state
-                transcribeBtn.disabled = true;
-                statusDiv.textContent = 'File upload और processing हो रही है...';
-                statusDiv.className = 'status processing';
-                resultContainer.style.display = 'none';
-                
-                try {
-                    const formData = new FormData();
-                    formData.append('audio', selectedFile);
-                    
-                    // Send to backend API
-                    const response = await fetch('/api/transcribe', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Server error: ${response.status} - ${errorText}`);
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.text) {
-                        transcriptDiv.textContent = data.text;
-                        resultContainer.style.display = 'block';
-                        statusDiv.textContent = 'Transcription successful!';
-                        statusDiv.className = 'status success';
-                    } else {
-                        throw new Error('Invalid response from server');
-                    }
-                    
-                } catch (error) {
-                    console.error('Transcription error:', error);
-                    statusDiv.textContent = 'Error: ' + error.message;
-                    statusDiv.className = 'status error';
-                } finally {
-                    transcribeBtn.disabled = false;
-                }
-            });
-            
+            // Transcription handler - Fixed version
+transcribeBtn.addEventListener('click', async function() {
+    if (!selectedFile) {
+        statusDiv.textContent = 'कृपया पहले एक audio file select करें';
+        statusDiv.className = 'status error';
+        return;
+    }
+    
+    transcribeBtn.disabled = true;
+    statusDiv.textContent = 'File upload और processing हो रही है...';
+    statusDiv.className = 'status processing';
+    resultContainer.style.display = 'none';
+    
+    try {
+        const formData = new FormData();
+        formData.append('audio', selectedFile);
+        
+        // सही API endpoint का use करें
+        const response = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData
+        });
+        
+        // Check if response is OK
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.text) {
+            transcriptDiv.textContent = data.text;
+            resultContainer.style.display = 'block';
+            statusDiv.textContent = 'Transcription successful!';
+            statusDiv.className = 'status success';
+        } else {
+            throw new Error('Invalid response from server');
+        }
+        
+    } catch (error) {
+        console.error('Transcription error:', error);
+        statusDiv.textContent = 'Error: ' + error.message;
+        statusDiv.className = 'status error';
+    } finally {
+        transcribeBtn.disabled = false;
+    }
+});
             // Copy text handler
             copyBtn.addEventListener('click', function() {
                 const text = transcriptDiv.textContent;
