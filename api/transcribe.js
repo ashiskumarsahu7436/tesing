@@ -1,4 +1,3 @@
-// api/transcribe.js - Simplified version
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,23 +9,24 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
   
+  // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
   
   try {
-    // Simulate processing delay
+    // Simulate processing
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Return simulated transcription
+    // Return response
     res.status(200).json({ 
       success: true, 
-      text: "यह आपकी audio file का simulated transcription है।" 
+      text: "यह आपकी audio file का transcription है। (Simulated Response)" 
     });
     
   } catch (error) {
     res.status(500).json({ 
-      error: 'Processing failed' 
+      error: 'Processing failed: ' + error.message 
     });
   }
 }
