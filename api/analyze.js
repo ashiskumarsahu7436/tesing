@@ -36,19 +36,21 @@ export default async function handler(req, res) {
           method: "POST",
           headers: {
             "Authorization": `Token ${apiKey}`,
-            "Content-Type": "audio/mpeg", // or audio/wav depending on your file
+            "Content-Type": "audio/mpeg", // or audio/wav depending on file type
           },
           body: audioData,
         }
       );
 
-      if (!deepgramRes.ok) {
-        const errorText = await deepgramRes.text();
-        return res.status(500).json({ error: errorText });
-      }
+      const responseText = await deepgramRes.text();
 
-      const data = await deepgramRes.json();
-      return res.status(200).json(data);
+      try {
+        const data = JSON.parse(responseText);
+        return res.status(200).json(data);
+      } catch (err) {
+        // If Deepgram returns non-JSON (HTML error), send as plain text
+        return res.status(500).send(responseText);
+      }
 
     } catch (error) {
       return res.status(500).json({ error: error.message });
