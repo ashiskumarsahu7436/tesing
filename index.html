@@ -3,211 +3,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Recorder & Transcriber</title>
+    <title>Audio File Transcription</title>
     <style>
-        body {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+        }
+        
+        body {
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+        
         .container {
+            width: 100%;
+            max-width: 800px;
             background: white;
-            padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
         }
-        h1 {
-            color: #2563eb;
+        
+        header {
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            padding: 25px;
             text-align: center;
         }
-        .btn {
-            background: #2563eb;
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .main {
+            padding: 30px;
+        }
+        
+        .upload-container {
+            border: 2px dashed #4f46e5;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #f8fafc;
+            margin-bottom: 25px;
+            transition: all 0.3s;
+        }
+        
+        .upload-container:hover {
+            background: #f0f7ff;
+            border-color: #7c3aed;
+        }
+        
+        .upload-icon {
+            font-size: 50px;
+            color: #4f46e5;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .browse-btn {
+            background: #4f46e5;
             color: white;
-            padding: 12px 20px;
+            padding: 12px 25px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            margin: 10px 5px;
             font-size: 16px;
+            transition: all 0.3s;
         }
-        .btn:disabled {
+        
+        .browse-btn:hover {
+            background: #7c3aed;
+            transform: translateY(-2px);
+        }
+        
+        .selected-file {
+            margin-top: 20px;
+            padding: 15px;
+            background: #dcfce7;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .action-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(to right, #10b981, #059669);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .action-btn:hover:not(:disabled) {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .action-btn:disabled {
             background: #9ca3af;
             cursor: not-allowed;
+            transform: none;
         }
-        .btn-record {
-            background: #dc2626;
-        }
-        .btn-stop {
-            background: #059669;
-        }
+        
         .status {
+            text-align: center;
+            margin: 20px 0;
             padding: 15px;
             border-radius: 8px;
-            margin: 15px 0;
-            text-align: center;
+            font-weight: 500;
         }
-        .recording {
-            background: #fee2e2;
-            color: #dc2626;
-            animation: pulse 1.5s infinite;
+        
+        .processing {
+            background: #fffbeb;
+            color: #d97706;
         }
+        
         .success {
             background: #dcfce7;
             color: #059669;
         }
+        
         .error {
             background: #fee2e2;
             color: #dc2626;
         }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
+        
+        .result-container {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .result-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .copy-btn {
+            padding: 8px 16px;
+            background: #e5e7eb;
+            color: #374151;
+            border-radius: 6px;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .transcript {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 150px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .supported-formats {
+            margin-top: 15px;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 600px) {
+            .main {
+                padding: 20px;
+            }
+            
+            .upload-container {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Audio Recorder & Transcriber</h1>
+        <header>
+            <h1>Audio File Transcription</h1>
+            <p class="description">अपनी audio files upload करें और text प्राप्त करें</p>
+        </header>
         
-        <div style="text-align: center;">
-            <button id="recordBtn" class="btn btn-record">🎤 Recording शुरू करें</button>
-            <button id="stopBtn" class="btn btn-stop" disabled>⏹️ Recording रोकें</button>
-            <button id="uploadBtn" class="btn" disabled>📤 Audio Upload करें</button>
-        </div>
-        
-        <div id="status" class="status">तैयार - Recording शुरू करने के लिए बटन दबाएं</div>
-        
-        <div id="audioContainer" style="display: none;">
-            <h3>Recorded Audio:</h3>
-            <audio id="audioPlayback" controls></audio>
-        </div>
-        
-        <div id="resultContainer" style="display: none;">
-            <h3>Transcription Result:</h3>
-            <div id="transcript" style="background: #f3f4f6; padding: 15px; border-radius: 8px; min-height: 100px;"></div>
-            <button id="copyBtn" class="btn" style="margin-top: 15px;">📋 Copy Text</button>
+        <div class="main">
+            <div class="upload-container" id="uploadContainer">
+                <div class="upload-icon">🎵</div>
+                <p class="upload-text">क्लिक करके audio file select करें या file को यहाँ drag & drop करें</p>
+                <input type="file" id="fileInput" class="file-input" accept="audio/*">
+                <button class="browse-btn" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+                
+                <div class="selected-file" id="selectedFile">
+                    <strong>Selected File: </strong>
+                    <span id="fileName"></span>
+                </div>
+            </div>
+            
+            <div class="supported-formats">
+                Supported formats: MP3, WAV, M4A, OGG, WEBM
+            </div>
+            
+            <button id="transcribeBtn" class="action-btn" disabled>Transcribe Audio</button>
+            
+            <div id="status" class="status">तैयार - कोई file select करें</div>
+            
+            <div class="result-container" id="resultContainer">
+                <div class="result-header">
+                    <div class="result-title">Transcription Result</div>
+                    <button class="copy-btn" id="copyBtn">Copy Text</button>
+                </div>
+                <div class="transcript" id="transcript"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        let mediaRecorder;
-        let audioChunks = [];
-        let audioBlob;
-
-        const recordBtn = document.getElementById('recordBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const statusDiv = document.getElementById('status');
-        const audioContainer = document.getElementById('audioContainer');
-        const audioPlayback = document.getElementById('audioPlayback');
-        const resultContainer = document.getElementById('resultContainer');
-        const transcriptDiv = document.getElementById('transcript');
-        const copyBtn = document.getElementById('copyBtn');
-
-        // Check if browser supports audio recording
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            statusDiv.textContent = "आपका browser audio recording support नहीं करता";
-            statusDiv.className = "status error";
-            recordBtn.disabled = true;
-        }
-
-        // Start recording
-        recordBtn.addEventListener('click', async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                
-                mediaRecorder.ondataavailable = (event) => {
-                    audioChunks.push(event.data);
-                };
-                
-                mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    audioPlayback.src = audioUrl;
-                    audioContainer.style.display = 'block';
-                    uploadBtn.disabled = false;
-                };
-                
-                mediaRecorder.start();
-                recordBtn.disabled = true;
-                stopBtn.disabled = false;
-                statusDiv.textContent = "Recording चल रही है...";
-                statusDiv.className = "status recording";
-                
-            } catch (error) {
-                statusDiv.textContent = "Microphone access error: " + error.message;
-                statusDiv.className = "status error";
-            }
-        });
-
-        // Stop recording
-        stopBtn.addEventListener('click', () => {
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                mediaRecorder.stop();
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                recordBtn.disabled = false;
-                stopBtn.disabled = true;
-                statusDiv.textContent = "Recording complete. Upload करने के लिए बटन दबाएं";
-                statusDiv.className = "status";
-            }
-        });
-
-        // Upload audio to backend
-        uploadBtn.addEventListener('click', async () => {
-            if (!audioBlob) {
-                statusDiv.textContent = "पहले recording करें";
-                statusDiv.className = "status error";
-                return;
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadContainer = document.getElementById('uploadContainer');
+            const selectedFileDiv = document.getElementById('selectedFile');
+            const fileNameSpan = document.getElementById('fileName');
+            const transcribeBtn = document.getElementById('transcribeBtn');
+            const statusDiv = document.getElementById('status');
+            const resultContainer = document.getElementById('resultContainer');
+            const transcriptDiv = document.getElementById('transcript');
+            const copyBtn = document.getElementById('copyBtn');
+            
+            let selectedFile = null;
+            
+            // File selection handler
+            fileInput.addEventListener('change', function(e) {
+                if (this.files && this.files.length > 0) {
+                    selectedFile = this.files[0];
+                    fileNameSpan.textContent = selectedFile.name;
+                    selectedFileDiv.style.display = 'block';
+                    transcribeBtn.disabled = false;
+                    statusDiv.textContent = 'File selected. Transcribe करने के लिए बटन दबाएं';
+                    statusDiv.className = 'status';
+                }
+            });
+            
+            // Drag and drop functionality
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadContainer.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
             }
             
-            uploadBtn.disabled = true;
-            statusDiv.textContent = "Audio process हो रही है...";
-            statusDiv.className = "status recording";
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadContainer.addEventListener(eventName, highlight, false);
+            });
             
-            try {
-                const formData = new FormData();
-                formData.append('audio', audioBlob, 'recording.webm');
-                
-                const response = await fetch('/api/transcribe', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.text) {
-                    transcriptDiv.textContent = data.text;
-                    resultContainer.style.display = 'block';
-                    statusDiv.textContent = "Transcription successful!";
-                    statusDiv.className = "status success";
-                } else {
-                    throw new Error("Invalid response from server");
-                }
-                
-            } catch (error) {
-                statusDiv.textContent = "Error: " + error.message;
-                statusDiv.className = "status error";
-            } finally {
-                uploadBtn.disabled = false;
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadContainer.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                uploadContainer.style.background = '#e0f2fe';
+                uploadContainer.style.borderColor = '#3b82f6';
             }
-        });
-
-        // Copy text to clipboard
-        copyBtn.addEventListener('click', () => {
-            const text = transcriptDiv.textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Text copied to clipboard!");
-            }).catch(err => {
-                alert("Copy failed: " + err);
+            
+            function unhighlight() {
+                uploadContainer.style.background = '#f8fafc';
+                uploadContainer.style.borderColor = '#4f46e5';
+            }
+            
+            uploadContainer.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files && files.length > 0) {
+                    const audioFile = files[0];
+                    
+                    // Check if file is audio
+                    if (!audioFile.type.startsWith('audio/')) {
+                        statusDiv.textContent = 'कृपया केवल audio files select करें';
+                        statusDiv.className = 'status error';
+                        return;
+                    }
+                    
+                    selectedFile = audioFile;
+                    fileNameSpan.textContent = selectedFile.name;
+                    selectedFileDiv.style.display = 'block';
+                    transcribeBtn.disabled = false;
+                    statusDiv.textContent = 'File selected. Transcribe करने के लिए बटन दबाएं';
+                    statusDiv.className = 'status';
+                }
+            }
+            
+            // Transcription handler
+            transcribeBtn.addEventListener('click', async function() {
+                if (!selectedFile) {
+                    statusDiv.textContent = 'कृपया पहले एक audio file select करें';
+                    statusDiv.className = 'status error';
+                    return;
+                }
+                
+                // Show processing state
+                transcribeBtn.disabled = true;
+                statusDiv.textContent = 'File upload और processing हो रही है...';
+                statusDiv.className = 'status processing';
+                resultContainer.style.display = 'none';
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('audio', selectedFile);
+                    
+                    // Send to backend API
+                    const response = await fetch('/api/transcribe', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Server error: ${response.status} - ${errorText}`);
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.text) {
+                        transcriptDiv.textContent = data.text;
+                        resultContainer.style.display = 'block';
+                        statusDiv.textContent = 'Transcription successful!';
+                        statusDiv.className = 'status success';
+                    } else {
+                        throw new Error('Invalid response from server');
+                    }
+                    
+                } catch (error) {
+                    console.error('Transcription error:', error);
+                    statusDiv.textContent = 'Error: ' + error.message;
+                    statusDiv.className = 'status error';
+                } finally {
+                    transcribeBtn.disabled = false;
+                }
+            });
+            
+            // Copy text handler
+            copyBtn.addEventListener('click', function() {
+                const text = transcriptDiv.textContent;
+                if (!text) return;
+                
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        alert('Text copied to clipboard!');
+                    })
+                    .catch(err => {
+                        console.error('Copy failed:', err);
+                        alert('Copy failed. Please try again.');
+                    });
             });
         });
     </script>
