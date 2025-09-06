@@ -1,3 +1,4 @@
+// api/transcribe.js - Simplified version
 export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,25 +15,18 @@ export default async function handler(req, res) {
   }
   
   try {
-    // Check if file was uploaded
-    if (!req.body || !req.files) {
-      return res.status(400).json({ error: 'No audio file provided' });
-    }
-    
-    // Here you would process the audio file
-    // For now, we'll simulate processing
+    // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Return simulated transcription
     res.status(200).json({ 
       success: true, 
-      text: "यह आपकी audio file का simulated transcription है। असल implementation में, आपकी file process होगी।" 
+      text: "यह आपकी audio file का simulated transcription है।" 
     });
     
   } catch (error) {
-    console.error('Server error:', error);
     res.status(500).json({ 
-      error: 'Processing failed: ' + error.message 
+      error: 'Processing failed' 
     });
   }
 }
