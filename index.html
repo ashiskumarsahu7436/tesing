@@ -48,13 +48,16 @@ async function analyzeAudio() {
             body: formData
         });
 
-        const data = await response.json();
-        resultsDiv.innerHTML = "";
-
-        if (data.error) {
-            resultsDiv.innerHTML = "Error: " + data.error;
+        const responseText = await response.text();
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (err) {
+            resultsDiv.innerHTML = "Error from server:<br>" + responseText;
             return;
         }
+
+        resultsDiv.innerHTML = "";
 
         const channels = data.channels || [data];
         channels.forEach(channel => {
