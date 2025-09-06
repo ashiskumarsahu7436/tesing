@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deepgram Audio Analysis</title>
+<style>
+body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+input, button { padding: 10px; margin: 5px 0; width: 100%; max-width: 500px; }
+#results { margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px; }
+.speaker { margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: #fafafa; }
+</style>
+</head>
+<body>
+
+<h2>Deepgram Audio Analysis</h2>
+
+<label>Enter Deepgram API Key:</label>
+<input type="text" id="apiKey" placeholder="Enter API Key">
+
+<label>Select Audio File:</label>
+<input type="file" id="audioFile" accept="audio/*">
+
+<button onclick="analyzeAudio()">Analyze Audio</button>
+
+<div id="results"></div>
+
+<script>
+async function analyzeAudio() {
+    const apiKey = document.getElementById("apiKey").value.trim();
+    const fileInput = document.getElementById("audioFile");
+    const resultsDiv = document.getElementById("results");
+    resultsDiv.innerHTML = "Processing...";
+
+    if (!apiKey || fileInput.files.length === 0) {
+        alert("Please provide API Key and audio file.");
+        resultsDiv.innerHTML = "";
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("apiKey", apiKey);
+    formData.append("audio", fileInput.files[0]);
+
+    try {
+        const response = await fetch("/api/analyze", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await response.json();
+        resultsDiv.innerHTML = "";
+
+        if (data.error) {
+            resultsDiv.innerHTML = "Error: " + data.error;
+            return;
+        }
+
+        const channels = data.channels || [data];
+        channels.forEach(channel => {
+            if (channel.diarization) {
+                channel.diarization.forEach(speaker => {
+                    const div = document.createElement("div");
+                    div.classList.add("speaker");
+                    div.innerHTML = `
+                        <strong>${speaker.speaker}</strong><br>
+                        <strong>Transcript:</strong> ${speaker.transcript || "N/A"}<br>
+                        <strong>Emotion:</strong> ${JSON.stringify(speaker.emotion || {})}<br>
+                        <strong>Sentiment:</strong> ${JSON.stringify(speaker.sentiment || {})}
+                    `;
+                    resultsDiv.appendChild(div);
+                });
+            } else {
+                const div = document.createElement("div");
+                div.classList.add("speaker");
+                div.innerHTML = `
+                    <strong>Transcript:</strong> ${channel.transcript || "N/A"}<br>
+                    <strong>Emotion:</strong> ${JSON.stringify(channel.emotion || {})}<br>
+                    <strong>Sentiment:</strong> ${JSON.stringify(channel.sentiment || {})}
+                `;
+                resultsDiv.appendChild(div);
+            }
+        });
+
+    } catch (err) {
+        resultsDiv.innerHTML = "Error: " + err;
+    }
+}
+</script>
+
+</body>
+</html>
