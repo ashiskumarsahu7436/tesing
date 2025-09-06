@@ -428,49 +428,80 @@
             }
             
             // Handle transcription
-            transcribeBtn.addEventListener('click', async function() {
-                if (!selectedFile) {
-                    showStatus('कृपया एक audio file select करें', 'error');
-                    return;
-                }
-                
-                // Show loading state
-                loadingElement.classList.add('visible');
-                statusElement.textContent = '';
-                resultContainer.classList.remove('visible');
-                transcribeBtn.disabled = true;
-                
-                try {
-                    // Create form data
-                    const formData = new FormData();
-                    formData.append('audio', selectedFile);
-                    
-                    // Make API request to our backend
-                    const response = await fetch('/api/transcribe', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Transcription failed');
-                    }
-                    
-                    const data = await response.json();
-                    
-                    // Display the result
-                    transcriptElement.textContent = data.text;
-                    resultContainer.classList.add('visible');
-                    showStatus('Transcription completed successfully!', 'success');
-                    
-                } catch (error) {
-                    console.error('Transcription error:', error);
-                    showStatus('Error: ' + error.message, 'error');
-                } finally {
-                    loadingElement.classList.remove('visible');
-                    transcribeBtn.disabled = false;
-                }
-            });
+transcribeBtn.addEventListener('click', async function() {
+    if (!selectedFile) {
+        showStatus('कृपया एक audio file select करें', 'error');
+        return;
+    }
+
+    // Show loading state
+    loadingElement.classList.add('visible');
+    statusElement.textContent = '';
+    resultContainer.classList.remove('visible');
+    transcribeBtn.disabled = true;
+    transcriptElement.textContent = ''; // Clear previous results
+
+    try {
+        // Create form data
+        const formData = new FormData();
+        formData.append('audio', selectedFile);
+
+        // Make API request to our backend
+        const response = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData
+        });
+
+        // Check if response is OK
+        if (!response.ok) {
+            // Try to get error message from JSON, else use status text
+            let errorMsg = `Server error: ${response.status} ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error || errorMsg;
+            } catch (e) {
+                // If response is not JSON, use default error message
+                console.error('Non-JSON error response:', e);
+            }
+            throw new Error(errorMsg);
+        }
+
+        // Try to parse JSON response
+        let data;
+        try {
+            data = await response.json();
+        } catch (jsonError) {
+            console.error('JSON parsing error:', jsonError);
+            throw new Error('Server returned invalid response format');
+        }
+
+        // Check if we got valid data with text property
+        if (!data || typeof data.text !== 'string') {
+            throw new Error('Server returned incomplete data');
+        }
+
+        // Display the result
+        transcriptElement.textContent = data.text;
+        resultContainer.classList.add('visible');
+        showStatus('Transcription completed successfully!', 'success');
+
+    } catch (error) {
+        console.error('Transcription error:', error);
+        
+        // More user-friendly error messages
+        let errorMessage = error.message;
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = 'Server connection failed. Please check your internet connection.';
+        } else if (error.message.includes('JSON')) {
+            errorMessage = 'Server response error. Please try again.';
+        }
+        
+        showStatus('Error: ' + errorMessage, 'error');
+    } finally {
+        loadingElement.classList.remove('visible');
+        transcribeBtn.disabled = false;
+    }
+});
             
             // Copy transcript to clipboard
             copyBtn.addEventListener('click', function() {
